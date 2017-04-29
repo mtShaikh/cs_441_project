@@ -174,13 +174,13 @@ int main()
           }
           else
           {
-            if(strcasecmp(input[1],"all")!=0)
+            if(strcasecmp(input[1],"all")==0)
             {
-              killoneprocess(input[1]);
+              killallprocess(input[2]);
             }
             else
             {
-              killallprocess(input[2]); 
+               killoneprocess(input[1]);
             }
           }
         }
@@ -340,9 +340,9 @@ void killallprocess(char *process)
   if(prc!=NULL)
   {
     if(prc->isrunning!=0)
-    {
+    { 
       while(prc!=NULL)
-      {
+      { printf("hello\n");
         int killret = kill(prc->pid,SIGTERM);
         if(killret<0)
         {
