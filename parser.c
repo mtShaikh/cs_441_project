@@ -7,7 +7,7 @@
 */
 //TODO: fix formatting
 //TODO: pipe par data baad mei pohanch raha hai
-//TODO: kill error
+//TODO: kill all error: solve using array of all processes with the same name as the search
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
