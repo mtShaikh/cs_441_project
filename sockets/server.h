@@ -24,7 +24,7 @@ typedef void* (*tfunction)(void*);
 
 void grimreaper (int signalnumber);
 void reap_subservers(int signo);
-void print_client(int signo);
+void print_client(int signo, siginfo_t *info,void *ctx);
 void terminatechildren (int signo);
 
 char **token(char *line);

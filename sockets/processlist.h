@@ -9,13 +9,14 @@
 
 #define MEDIUMBUFFER 64
 
-typedef struct process {
- int pid;
- char *processname;
- struct timeval starttime;
- struct timeval endtime;
- int isrunning;
- struct process *nextprocess;
+typedef struct process
+{
+  int pid;
+  char *processname;
+  struct timeval starttime;
+  struct timeval endtime;
+  int isrunning;
+  struct process *nextprocess;
 } processinfo;
 
 processinfo *head = NULL;
@@ -40,24 +41,24 @@ searchpid (int pid)
 
   //if list is empty
   if (head == NULL)
-  {
+    {
       return NULL;
-  }
+    }
   //navigate through list
   while (current->pid != pid)
-  {
+    {
 
       //if it is last node
       if (current->nextprocess == NULL)
-      {
+        {
           return NULL;
-      }
+        }
       else
-      {
+        {
           //go to next link
           current = current->nextprocess;
-      }
-  }
+        }
+    }
   //if data found, return the current Link
   return current;
 }
@@ -67,24 +68,24 @@ searchpname (char *name, processinfo *ptr)
 {
   processinfo *current = ptr;
   if (ptr == NULL)
-  {
+    {
       return NULL;
-  }
+    }
   //navigate through list
   while (strcasecmp (current->processname, name) != 0)
-  {
+    {
 
       //if it is last node
       if (current->nextprocess == NULL)
-      {
+        {
           return NULL;
-      }
+        }
       else
-      {
+        {
           //go to next link
           current = current->nextprocess;
-      }
-  }
+        }
+    }
   //if data found, return the current Link
   return current;
 }
@@ -104,7 +105,7 @@ insertfirst (int pid, char *name, struct timeval start)
 {
   //create a link
   processinfo *link =
-  (struct process *) malloc (sizeof (struct process));
+    (struct process *) malloc (sizeof (struct process));
   link->processname = malloc (sizeof (char *) * MEDIUMBUFFER);
   link->pid = pid;
   link->processname = name;
