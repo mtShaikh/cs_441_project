@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <errno.h>
 #include <netdb.h>
 
 #define BUFFSIZE 5000
@@ -32,11 +33,13 @@ void *writethread(void *args)
 		if (readct<0)
 		{
 			perror("read");
-			exit(-1);    
+			serverstatus = 0;
+			close(*sockfd);
+			pthread_exit(NULL);   
 		}
 		else if (readct == 0)
 		{
-			write(1,"\ndisconnected from server\n",sizeof("\ndisconnected from server\n"));
+			write(1,"Disconnected from server\n",sizeof "disconnected from server\n");
 			serverstatus = 0;
 			close(*sockfd);
 			pthread_exit(NULL);
@@ -72,15 +75,9 @@ void *readthread(void *args)
 			perror("error in read");
 			exit(-1);
 		}
-		else if (readct == 0)
-		{
-			write(1,"disconnected from server\n",sizeof("disconnected from server\n"));
-			close(*sockfd);
-			pthread_exit(NULL);
-		}
 		line = token(buffer);
 		char *tokenfirst = line[0];
-	  	sscanf(*line,"%s",tokenfirst);
+		sscanf(*line,"%s",tokenfirst);
 		if(strcasecmp(tokenfirst,"exit") == 0)
 		{
 			write(1, "exiting\n", sizeof("exiting\n"));
@@ -95,25 +92,32 @@ void *readthread(void *args)
 			close(*sockfd);
 			pthread_exit(NULL);
 		}
+		else if (strcasecmp (tokenfirst, "help") == 0)
+		{
+			char *help = "mul\tEnter numbers to multiply\n"
+			"sub\tEnter numbers to subtract\ndiv\tEnter numbers to divide\nadd\tEnter numbers to add\n"
+			"print\tEnter a message to print it\nrun\tRun a program\nexit\tTerminate the shell\ndisconnect\tDisconnect from server\n";
+			write (1, help, strlen (help));
+		}
 		else if(strcasecmp(tokenfirst,"\n")==0)
 		{
 			continue;
 		}
 		else
 		{	//printf("aa%s\n",inputline );
-			int writect = write(*sockfd,inputline,readct);
-			if (writect < 0)
-			{
+	int writect = write(*sockfd,inputline,readct);
+	if (writect < 0)
+	{
 				// write(1,"disconnected from server\n",sizeof("disconnected from server\n"));
 				// close(*sockfd);
 				// pthread_exit(NULL);	
-			}
+	}
 			// else if (writect==0)
 			// {
-				
+
 			// }
-		}
-	}
+}
+}
 }
 
 int main(int argc, char *argv[])
@@ -137,7 +141,7 @@ int main(int argc, char *argv[])
 		}
 		line = token(buffer);
 		char *tokenfirst = line[0];
-	  	sscanf(*line,"%s",tokenfirst);
+		sscanf(*line,"%s",tokenfirst);
 		if(strcasecmp(tokenfirst,"exit") == 0)
 		{
 			write(1, "exiting\n", sizeof("exiting\n"));
@@ -146,6 +150,12 @@ int main(int argc, char *argv[])
 		}
 		else if(strcasecmp(tokenfirst,"connect") == 0)
 		{
+			if (line[2] == NULL || line[1] == NULL)
+			{
+				char *help = "Error: Wrong usage of connect command...type 'help'\n";
+				write (1, help, strlen (help));
+				continue;
+			}
 			sock = serverconnect(line[1], line[2]);
 			if (sock < 0)
 			{
@@ -159,14 +169,27 @@ int main(int argc, char *argv[])
 				perror("pthread_create");
 				exit(1);
 			}
-			pthread_join(readthreadid, (NULL));
+			if(pthread_join(readthreadid, (NULL))<0)
+			{
+				perror("pthread_join");
+				exit(1);
+			}
 			if (serverstatus == 0)
 			{
 				pthread_cancel(writethreadid);
 			}
-			pthread_join(writethreadid, (NULL));
+			if(pthread_join(writethreadid, (NULL))<0)
+			{
+				perror("pthread_join");
+				exit(1);
+			}
 			close(sock);
 			continue;
+		}
+		else if(strcasecmp(tokenfirst,"help")==0)
+		{
+			char *help = "connect\tConnect to a server\n\tUse: connect [ip4 address] [port]\nexit\tTerminate the shell\n";
+			write (1, help, strlen (help));
 		}
 		else if(strcasecmp(tokenfirst,"\n")==0)
 		{
@@ -203,11 +226,10 @@ int serverconnect(char *host, char *port)
 		return -1;
 	}
 	bcopy(hp->h_addr, &server.sin_addr, hp->h_length);
-	server.sin_port = htons(P);
+	server.sin_port = htons(atoi(port));
 	
 	if (connect(sock,(struct sockaddr *) &server,sizeof(server)) < 0) 
 	{
-		//TODO: connection refused specific error handle
 		perror("connecting stream socket");
 		return -1;
 	}
